@@ -1,0 +1,109 @@
+
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import API from "../services/api";
+import { Mail, Lock, LogIn } from "lucide-react";
+
+function UserLogin() {
+    const navigate = useNavigate();
+
+    const [form, setForm] = useState({
+        email: "",
+        password: "",
+    });
+
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+
+        try {
+            const response = await API.post("/users/login", form);
+
+            localStorage.setItem("userToken", response.data.token);
+            localStorage.setItem("userInfo", JSON.stringify(response.data.user));
+
+            navigate("/");
+        } catch (err) {
+            setError(
+                err.response?.data?.message || "Login failed. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <main className="auth-page">
+            <div className="auth-card">
+                <div className="auth-icon">
+                    <LogIn size={28} />
+                </div>
+
+                <span className="section-label">WELCOME BACK</span>
+                <h1>User Login<span>.</span></h1>
+
+                <p className="auth-description">
+                    Login to like blogs and share your thoughts with the community.
+                </p>
+
+                <form onSubmit={handleSubmit} className="auth-form">
+                    <label>Email Address</label>
+                    <div className="auth-input-wrap">
+                        <Mail size={18} />
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            value={form.email}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <label>Password</label>
+                    <div className="auth-input-wrap">
+                        <Lock size={18} />
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            value={form.password}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    {error && <p className="auth-error">{error}</p>}
+
+                    <button
+                        type="submit"
+                        className="btn btn-primary auth-submit"
+                        disabled={loading}
+                    >
+                        {loading ? "Logging in..." : "Login"}
+                    </button>
+                </form>
+
+                <p className="auth-switch">
+                    Don't have an account?{" "}
+                    <Link to="/register">Create Account</Link>
+                </p>
+
+                <p className="auth-switch">
+                    Are you an administrator?{" "}
+                    <Link to="/admin/login">Admin Login</Link>
+                </p>
+            </div>
+        </main>
+    );
+}
+
+export default UserLogin;
